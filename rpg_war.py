@@ -4,7 +4,7 @@ from aiogram.utils import executor
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # --- [ إعدادات MBAB الرئيسية ] ---
-API_TOKEN = 'YOUR_BOT_TOKEN' # ضع توكن البوت هنا
+API_TOKEN = '8663020855:AAEs2kOXxodPWZZLWYjMhAE5k_iyzNlxVxM' # ضع توكن البوت هنا
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
