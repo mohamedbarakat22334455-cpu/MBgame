@@ -5,7 +5,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiohttp import web
 
 # --- [ الإعدادات ] ---
-API_TOKEN = '8533015825:AAGy7A-Abn3qqW8lwa7b93-Ii92wNTRP_cU'
+API_TOKEN = '8663020855:AAFr5eSCwu_cztS2e-bRvke6GixUhtolRyk'
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
