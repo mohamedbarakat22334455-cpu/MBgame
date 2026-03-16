@@ -12,7 +12,7 @@ dp = Dispatcher(bot)
 
 # --- [ قاعدة البيانات ] ---
 def init_db():
-    conn = sqlite3.connect('armageddon_pro.db', check_same_thread=False)
+    conn = sqlite3.connect('armageddon_vFinal.db', check_same_thread=False)
     conn.row_factory = sqlite3.Row
     db = conn.cursor()
     db.execute('''CREATE TABLE IF NOT EXISTS players 
@@ -25,12 +25,12 @@ db_conn = init_db()
 
 WEAPONS = [
     {"id": 0, "name": "قبضة اليد", "power": 10, "price": 0},
-    {"id": 1, "name": "خنجر حديدي", "power": 30, "price": 150},
-    {"id": 2, "name": "سيف الغضب", "power": 70, "price": 500},
-    {"id": 3, "name": "الرمح الذهبي", "power": 150, "price": 1200}
+    {"id": 1, "name": "خنجر حديدي", "power": 35, "price": 150},
+    {"id": 2, "name": "سيف الغضب", "power": 80, "price": 500},
+    {"id": 3, "name": "الرمح الذهبي", "power": 180, "price": 1200}
 ]
 
-# --- [ واجهة اللعبة - HTML/CSS الفخمة ] ---
+# --- [ واجهة اللعبة - HTML/CSS ] ---
 async def handle_index(request):
     html_content = """
     <!DOCTYPE html>
@@ -38,72 +38,68 @@ async def handle_index(request):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <title>ARMAGEDDON WAR</title>
+        <title>ARMAGEDDON</title>
         <style>
-            body { background: #000; color: #FFD700; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; }
-            .screen { display: none; padding: 15px; }
-            .active { display: block; }
-            .card { border: 2px solid #FFD700; border-radius: 15px; padding: 15px; background: rgba(255, 215, 0, 0.05); box-shadow: 0 0 15px #FFD700; }
-            .btn { background: linear-gradient(45deg, #FFD700, #B8860B); border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; margin: 5px 0; cursor: pointer; color: #000; }
+            body { background: #000; color: #FFD700; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 10px; }
+            .card { border: 2px solid #FFD700; border-radius: 20px; padding: 20px; background: rgba(255, 215, 0, 0.05); box-shadow: 0 0 20px #FFD700; }
+            .btn { background: linear-gradient(45deg, #FFD700, #B8860B); border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; margin: 5px 0; cursor: pointer; color: #000; font-size: 1.1em; }
             .hp-bar { width: 100%; background: #333; height: 15px; border-radius: 10px; margin: 10px 0; border: 1px solid #FFD700; overflow: hidden; }
-            .hp-fill { height: 100%; background: red; transition: 0.3s; width: 100%; }
-            .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; font-weight: bold; }
-            .monster-img { height: 150px; filter: drop-shadow(0 0 10px #FFD700); margin: 10px 0; }
-            .item { border-bottom: 1px solid #333; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
+            .hp-fill { height: 100%; background: linear-gradient(90deg, #ff0000, #b30000); width: 100%; transition: 0.3s; }
+            .stats { display: flex; justify-content: space-around; font-weight: bold; margin: 10px 0; }
+            .monster { height: 140px; filter: drop-shadow(0 0 10px #FFD700); margin: 15px 0; }
+            .shop-item { border-bottom: 1px solid #333; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
+            #shop { display: none; }
         </style>
     </head>
     <body>
-        <div id="fight-screen" class="screen active">
-            <div class="card">
-                <h2 style="margin:5px">🛡 ARMAGEDDON</h2>
-                <div class="stats-grid">
-                    <div>🩸 <span id="hp">100</span>%</div>
-                    <div>🪙 <span id="gold">100</span></div>
-                </div>
-                <div class="hp-bar"><div id="hp-bar" class="hp-fill"></div></div>
-                <img src="https://img.icons8.com/plasticine/200/monster-face.png" class="monster-img">
-                <div id="log" style="height:35px; font-size:0.9em">استعد للمعركة!</div>
-                <button class="btn" onclick="gameAction('attack')">⚔️ هجوم</button>
-                <button class="btn" style="background:#fff" onclick="switchScreen('shop-screen')">🏪 المتجر</button>
+        <div id="game" class="card">
+            <h1 style="margin:5px">🛡 ARMAGEDDON</h1>
+            <div class="stats">
+                <span>🩸 <span id="hp">100</span>%</span>
+                <span>🪙 <span id="gold">100</span></span>
             </div>
+            <div class="hp-bar"><div id="hp-bar" class="hp-fill"></div></div>
+            <img src="https://img.icons8.com/plasticine/200/monster-face.png" class="monster">
+            <div id="log" style="height:40px; font-size:0.85em; color: white;">اضغط هجوم لبدء المعركة!</div>
+            <button class="btn" onclick="play('attack')">⚔️ هجوم كاسح</button>
+            <button class="btn" style="background:#fff" onclick="toggleShop()">🏪 المتجر الملكي</button>
         </div>
 
-        <div id="shop-screen" class="screen">
-            <div class="card">
-                <h3>🏪 المتجر الملكي</h3>
-                <div id="shop-items"></div>
-                <button class="btn" style="background:gray; color:white" onclick="switchScreen('fight-screen')">🔙 عودة</button>
-            </div>
+        <div id="shop" class="card">
+            <h3>🏪 متجر الأسلحة</h3>
+            <div id="items-list"></div>
+            <button class="btn" style="background:gray; color:white" onclick="toggleShop()">🔙 عودة للقتال</button>
         </div>
 
         <script>
-            function switchScreen(id) {
-                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-                document.getElementById(id).classList.add('active');
-                if(id === 'shop-screen') loadShop();
+            function toggleShop() {
+                const g = document.getElementById('game');
+                const s = document.getElementById('shop');
+                if(g.style.display === 'none') { g.style.display='block'; s.style.display='none'; }
+                else { g.style.display='none'; s.style.display='block'; loadShop(); }
             }
 
-            async function gameAction(type, itemId = null) {
-                const res = await fetch(`/api/play?type=${type}&item=${itemId}`);
+            async function play(type, id = null) {
+                const res = await fetch(`/api/play?type=${type}&id=${id}`);
                 const data = await res.json();
                 document.getElementById('hp').innerText = data.hp;
                 document.getElementById('gold').innerText = data.gold;
                 document.getElementById('hp-bar').style.width = data.hp + "%";
                 document.getElementById('log').innerText = data.msg;
-                if(data.success && type === 'buy') switchScreen('fight-screen');
+                if(data.success && type === 'buy') toggleShop();
             }
 
             function loadShop() {
                 const items = [
-                    {id: 1, name: "خنجر حديدي", price: 150},
-                    {id: 2, name: "سيف الغضب", price: 500},
-                    {id: 3, name: "الرمح الذهبي", price: 1200}
+                    {id:1, name:"خنجر حديدي", price:150},
+                    {id:2, name:"سيف الغضب", price:500},
+                    {id:3, name:"الرمح الذهبي", price:1200}
                 ];
-                let html = '';
+                let h = '';
                 items.forEach(i => {
-                    html += `<div class="item"><span>${i.name} (${i.price}🪙)</span><button onclick="gameAction('buy', ${i.id})" style="padding:5px">شراء</button></div>`;
+                    h += `<div class="shop-item"><span>${i.name} (${i.price}🪙)</span><button onclick="play('buy', ${i.id})">شراء</button></div>`;
                 });
-                document.getElementById('shop-items').innerHTML = html;
+                document.getElementById('items-list').innerHTML = h;
             }
         </script>
     </body>
@@ -111,15 +107,15 @@ async def handle_index(request):
     """
     return web.Response(text=html_content, content_type='text/html')
 
-# --- [ API السيرفر ] ---
-async def handle_play(request):
+# --- [ API الخلفية ] ---
+async def handle_api(request):
     action = request.query.get('type')
-    item_id = request.query.get('item')
-    uid = 12345 
+    item_id = request.query.get('id')
+    uid = 12345 # سيتم ربطه بـ Telegram ID
     
     db = db_conn.cursor()
     db.execute("SELECT * FROM players WHERE uid = ?", (uid,))
-    p = dict(db.fetchone() or {"gold": 100, "hp": 100, "weapon_id": 0, "level": 1})
+    p = dict(db.fetchone() or {"gold": 100, "hp": 100, "weapon_id": 0})
     
     gold, hp, w_id = p['gold'], p['hp'], p['weapon_id']
     msg, success = "", True
@@ -127,17 +123,17 @@ async def handle_play(request):
     if action == 'attack':
         power = next(w['power'] for w in WEAPONS if w['id'] == w_id)
         dmg = random.randint(5, 12)
-        earn = random.randint(10, 20) + (power // 5)
+        earn = random.randint(10, 25) + (power // 5)
         hp = max(0, hp - dmg)
         gold += earn
-        msg = f"💥 ضربت بقوة {power}! كسبت {earn}🪙"
+        msg = f"💥 ضربت بقوة {power}! كسبت {earn} ذهب ونقص دمك {dmg}%"
     
     elif action == 'buy':
         item = next((w for w in WEAPONS if str(w['id']) == item_id), None)
         if item and gold >= item['price']:
             gold -= item['price']
             w_id = item['id']
-            msg = f"⚔️ تم شراء {item['name']}!"
+            msg = f"⚔️ مبروك! اشتريت {item['name']}"
         else:
             msg = "❌ الذهب لا يكفي!"
             success = False
@@ -148,14 +144,14 @@ async def handle_play(request):
 
 app = web.Application()
 app.router.add_get('/', handle_index)
-app.router.add_get('/api/play', handle_play)
+app.router.add_get('/api/play', handle_api)
 
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
     kb = types.InlineKeyboardMarkup().add(
-        types.InlineKeyboardButton("🎮 ابدأ اللعبة", web_app=types.WebAppInfo(url=WEB_URL))
+        types.InlineKeyboardButton("🎮 ابدأ اللعبة (شاشة كاملة)", web_app=types.WebAppInfo(url=WEB_URL))
     )
-    await message.reply("🏆 مرحباً بك في **ARMAGEDDON**\nجاهز للمعركة يا بطل؟", reply_markup=kb, parse_mode="Markdown")
+    await message.reply("🏆 أهلاً بك في **ARMAGEDDON**\nجاهز للمعركة؟", reply_markup=kb, parse_mode="Markdown")
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8080))
