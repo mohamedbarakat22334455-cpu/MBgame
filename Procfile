@@ -1,1 +1,1 @@
-worker: python rpg_war.py
+worker: python main.py
