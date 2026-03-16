@@ -120,8 +120,22 @@ async def back_to_menu(call: types.CallbackQuery):
     await main_menu(call)
 
 # --- [ تشغيل السيرفر ] ---
+# --- [ تشغيل السيرفر المطور للـ Railway ] ---
+async def on_startup(dp):
+    print("✅ MBAB ARMAGEDDON IS CONNECTED TO TELEGRAM!")
+
 if __name__ == '__main__':
-    print("🚀 MBAB ARMAGEDDON IS STARTING...")
+    print("🚀 STARTING MBAB ARMAGEDDON...")
+    
+    # تشغيل البوت بطريقة مرنة عشان ميعملش Crash لو الشبكة وحشة
     loop = asyncio.get_event_loop()
-    loop.create_task(executor.start_polling(dp, skip_updates=True))
-    web.run_app(app, port=int(os.environ.get("PORT", 8080)))
+    
+    # محاولة تشغيل البولينج بدون ما يقفل السيرفر كله
+    try:
+        loop.create_task(executor.start_polling(dp, skip_updates=True, on_startup=on_startup))
+    except Exception as e:
+        print(f"⚠️ Telegram Connection Error: {e}")
+
+    # تشغيل الـ Web App فوراً (ده أهم سطر عشان Railway ميديناش Crashed)
+    port = int(os.environ.get("PORT", 8080))
+    web.run_app(app, host='0.0.0.0', port=port)
